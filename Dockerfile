@@ -29,8 +29,11 @@ RUN apk add --no-cache --update alpine-sdk \
 # Start a new, final image.
 FROM alpine as final
 
+# Add non-privileged user
+RUN adduser lnduser -D -u 1000
 # Define a root volume for data persistence.
-VOLUME /root/.lnd
+VOLUME /home/lnduser/.lnd
+
 
 # Add utilities for quality of life and SSL-related reasons. We also require
 # curl and gpg for the signature verification script.
@@ -42,16 +45,16 @@ RUN apk --no-cache add \
     curl
 
 # Copy the binaries from the builder image.
-COPY --from=builder /go/bin/lncli /bin/
-COPY --from=builder /go/bin/lnd /bin/
-COPY --from=builder /go/src/github.com/lightningnetwork/lnd/scripts/verify-install.sh /
-COPY --from=builder /go/src/github.com/lightningnetwork/lnd/scripts/keys/* /keys/
+COPY --chown=lnduser:lnduser --from=builder /go/bin/lncli /bin/
+COPY --chown=lnduser:lnduser --from=builder /go/bin/lnd /bin/
+COPY --chown=lnduser:lnduser --from=builder /go/src/github.com/lightningnetwork/lnd/scripts/verify-install.sh /
+COPY --chown=lnduser:lnduser --from=builder /go/src/github.com/lightningnetwork/lnd/scripts/keys/* /keys/
 
 # Store the SHA256 hash of the binaries that were just produced for later
 # verification.
 RUN sha256sum /bin/lnd /bin/lncli > /shasums.txt \
   && cat /shasums.txt
-
+USER lnduser
 # Expose lnd ports (p2p, rpc).
 EXPOSE 9735 10009
 

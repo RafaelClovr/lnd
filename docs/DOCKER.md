@@ -7,6 +7,12 @@ There are two flavors of Dockerfiles available:
  - `dev.Dockerfile` Used for development or testing builds. Uses the local code
    when building and allows local changes to be tested more easily.
 
+By default we create a non-root user called `lnduser` that allows running the
+LND service without unnecesary privileges. If you need to gain root access
+inside the container, you can access with the `-u 0` flag. For example:
+```bash
+docker exec -u 0 -ti lnd:rootless bash
+```
 ## Development/testing
 
 To build a standalone development image from the local source directory, use the
